@@ -12,7 +12,6 @@ export class AuthService {
     }
 
     async login(data) {
-        console.log(data);
         try {
             return await axios.post(`${URL}/users/login`, data);
         } catch (error) {

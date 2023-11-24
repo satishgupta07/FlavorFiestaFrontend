@@ -6,6 +6,8 @@ import Register from "./pages/auth/Register";
 import Home from "./pages/Home";
 import Cart from "./pages/customer/Cart";
 import Products from "./pages/admin/Products";
+import { ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
@@ -19,6 +21,7 @@ function App() {
           <Route exact path="/cart" element={<Cart />} />
           <Route exact path="/admin/products" element={<Products />} />
         </Routes>
+        <ToastContainer />
       </BrowserRouter>
     </>
   );
