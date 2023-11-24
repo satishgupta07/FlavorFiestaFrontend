@@ -15,6 +15,7 @@ const Login = () => {
     setError("");
     try {
       let userData = await authService.login(data);
+      localStorage.setItem("jwtToken", userData.data.data.access_token);
       userData = userData.data.data.user;
       dispatch(login({userData}));
       navigate("/");

@@ -1,16 +1,32 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { getAllProducts } from "../../services/menu";
 
 const Menu = () => {
+  const [menu, setMenu] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const products = await getAllProducts();
+        setMenu(products.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <section className="menu container mx-auto px-8 py-8">
-      <h1 className="text-xl font-bold mb-8">All Pizzas</h1>
+      <h1 className="text-xl font-bold mb-8">Menu</h1>
       <div className="grid grid-cols--1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 col-gap-12 row-gap-16">
-        {/* {pizzas.map((pizza) => (
-          <div key={pizza.id} className="w-full md:w-64 p-4">
+        {menu.map((pizza) => (
+          <div key={pizza._id} className="w-full md:w-64 p-4">
             <img
               data-tilt
               className="h-40 mb-4 mx-auto"
-              src={`/images/${pizza.image}`}
+              src={pizza.image}
               alt=""
             />
             <div className="text-center">
@@ -30,7 +46,7 @@ const Menu = () => {
               </div>
             </div>
           </div>
-        ))} */}
+        ))}
       </div>
     </section>
   );
