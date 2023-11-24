@@ -1,11 +1,36 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import authService from "../../../services/auth";
+import { useForm } from "react-hook-form";
+import { login } from "../../../store/authSlice";
 
 const Register = () => {
+  const navigate = useNavigate();
+  const [error, setError] = useState("");
+  const dispatch = useDispatch();
+  const { register, handleSubmit } = useForm();
+
+  const create = async (data) => {
+    setError("");
+    try {
+      let userData = await authService.createAccount(data);
+      userData = userData.data.data.user;
+      dispatch(login({userData}));
+      navigate("/");
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
   return (
     <section className="login flex justify-center pt-24">
       <div className="w-full max-w-sm">
-        <form className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        {error && <p className="text-red-600 mt-8 text-center">{error}</p>}
+        <form
+          onSubmit={handleSubmit(create)}
+          className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
+        >
           <div className="mb-4">
             <label
               className="block text-gray-700 text-sm font-bold mb-2"
@@ -19,6 +44,9 @@ const Register = () => {
               id="name"
               type="text"
               placeholder="Enter your name"
+              {...register("name", {
+                required: true,
+              })}
             />
           </div>
           <div className="mb-4">
@@ -34,6 +62,14 @@ const Register = () => {
               id="email"
               type="email"
               placeholder="Enter your email"
+              {...register("email", {
+                required: true,
+                validate: {
+                  matchPatern: (value) =>
+                    /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value) ||
+                    "Email address must be a valid address",
+                },
+              })}
             />
           </div>
           <div className="mb-6">
@@ -49,6 +85,9 @@ const Register = () => {
               id="password"
               type="password"
               placeholder="******************"
+              {...register("password", {
+                required: true,
+              })}
             />
           </div>
           <div className="flex items-center justify-between">
