@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getCart } from "../../../services/cart";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { addItemToCart } from "../../../store/cartSlice";
 
 const Cart = () => {
   const [cart, setCart] = useState();
   const user = useSelector((state) => state.auth.userData);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -13,6 +15,9 @@ const Cart = () => {
         const cart = await getCart();
         console.log(cart.data.data);
         setCart(cart.data.data);
+        const items = cart.data.data.items;
+        const itemCount = cart.data.data.items.length;
+        dispatch(addItemToCart({itemCount, items}))
       } catch (error) {
         console.log(error);
       }

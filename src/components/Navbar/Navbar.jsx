@@ -6,9 +6,9 @@ import { logout } from "../../store/authSlice";
 const Navbar = () => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.userData);
+  const itemCount = useSelector((state) => state.cart.itemCount);
 
   const handleLogout = () => {
-    // Add your logout logic here
     dispatch(logout());
     localStorage.removeItem('reduxState');
   };
@@ -67,9 +67,9 @@ const Navbar = () => {
               to="/cart"
               className="inline-block px-4 py-2 rounded-full flex items-center bg-orange-500"
             >
-              {/* <span id="cartCounter" className="text-white font-bold pr-2">
-                {session.cart ? session.cart.totalQty : ""}
-              </span> */}
+              <span id="cartCounter" className="text-white font-bold pr-2">
+                {itemCount}
+              </span>
               <img src="src\assets\cart.png" alt="cart" />
             </Link>
           </li>
