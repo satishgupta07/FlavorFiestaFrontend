@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getAllProducts } from "../../services/menu";
+import { addToCart } from "../../services/cart";
 
 const Menu = () => {
   const [menu, setMenu] = useState([]);
@@ -16,6 +17,16 @@ const Menu = () => {
 
     fetchData();
   }, []);
+
+  async function addToCartAndShowToast(pizzaId) {
+    try {
+      const res = await addToCart(pizzaId);
+      console.log(res);
+    } catch (err) {
+      console.log(err);
+      alert(err.response.data.message);
+    }
+  }
 
   return (
     <section className="menu container mx-auto px-8 py-8">
@@ -38,7 +49,9 @@ const Menu = () => {
                 <span className="font-bold text-lg">₹{pizza.price}</span>
                 <button
                   data-pizza={JSON.stringify(pizza)}
+                  key={pizza._id}
                   className="add-to-cart py-1 px-6 bg-transparent hover:bg-orange-500 text-orange-700 font-semibold hover:text-white py-2 px-4 border border-orange-500 hover:border-transparent rounded-full"
+                  onClick={() => addToCartAndShowToast(pizza._id)}
                 >
                   <span>+</span>
                   <span>Add</span>

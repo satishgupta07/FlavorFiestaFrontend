@@ -1,7 +1,9 @@
 import React from "react";
+import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
-const Navbar = ({ user, session }) => {
+const Navbar = () => {
+  const user = useSelector((state) => state.auth.userData);
   const handleLogout = () => {
     // Add your logout logic here
     document.getElementById("logout").submit();
@@ -11,7 +13,7 @@ const Navbar = ({ user, session }) => {
     <nav className="container mx-auto flex items-center justify-between py-4 px-4">
       <div>
         <Link to="/">
-          <img  src="src\assets\logo.png" alt="logo" id="logo" />
+          <img src="src\assets\logo.png" alt="logo" id="logo" />
         </Link>
       </div>
       <div className="justify-items-end">
@@ -21,6 +23,17 @@ const Navbar = ({ user, session }) => {
           </li>
           {user ? (
             <>
+              {user.role === "admin" ? (
+                <li className="ml-6">
+                  <Link
+                    to="/admin/products"
+                  >
+                    Products
+                  </Link>
+                </li>
+              ) : (
+                <></>
+              )}
               <li className="ml-6">
                 <Link
                   to={
@@ -31,6 +44,7 @@ const Navbar = ({ user, session }) => {
                 </Link>
               </li>
               <li className="ml-6">
+                <p>{user.name}</p>
                 <button onClick={handleLogout}>Logout</button>
               </li>
             </>
