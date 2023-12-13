@@ -1,12 +1,16 @@
 import React from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { logout } from "../../store/authSlice";
 
 const Navbar = () => {
+  const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.userData);
+
   const handleLogout = () => {
     // Add your logout logic here
-    document.getElementById("logout").submit();
+    dispatch(logout());
+    localStorage.removeItem('reduxState');
   };
 
   return (
