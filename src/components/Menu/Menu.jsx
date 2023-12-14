@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getAllProducts } from "../../services/menu";
 import { addToCart } from "../../services/cart";
+import { notify } from "../../services/toast";
 
 const Menu = () => {
   const [menu, setMenu] = useState([]);
@@ -22,6 +23,7 @@ const Menu = () => {
     try {
       const res = await addToCart(pizzaId);
       console.log(res);
+      notify("Product added to cart !!");
     } catch (err) {
       console.log(err);
       alert(err.response.data.message);

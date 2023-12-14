@@ -4,25 +4,14 @@ import { Link, useNavigate } from "react-router-dom";
 import authService from "../../../services/auth";
 import { useForm } from "react-hook-form";
 import { login } from "../../../store/authSlice";
-import { toast } from "react-toastify";
+import { notify } from "../../../services/toast";
 
 const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { register, handleSubmit } = useForm();
   const [error, setError] = useState("");
-  const notify = () =>
-    toast.success("User logged in successfully !!", {
-      position: "bottom-center",
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "colored",
-    });
-
+  
   const loginForm = async (data) => {
     setError("");
     try {
@@ -30,7 +19,7 @@ const Login = () => {
       localStorage.setItem("jwtToken", userData.data.data.access_token);
       userData = userData.data.data.user;
       if(userData) {
-        notify();
+        notify("User logged in successfully !!");
         dispatch(login({ userData }));
         navigate("/");
       }

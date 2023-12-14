@@ -23,3 +23,13 @@ export const getCart = async () => {
     console.log("Error while fetching cart !!", error);
   }
 };
+
+export const removeFromCart = async (productId) => {
+  console.log(productId);
+  console.log(jwtToken);
+  try {
+    return await axios.delete(`${URL}/cart/item/${productId}`, { headers });
+  } catch (error) {
+    console.log("Error while removing product from cart !!", error);
+  }
+};

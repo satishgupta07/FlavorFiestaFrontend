@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getCart } from "../../../services/cart";
+import { getCart, removeFromCart } from "../../../services/cart";
 import { useDispatch, useSelector } from "react-redux";
 import { addItemToCart } from "../../../store/cartSlice";
+import { notify } from "../../../services/toast";
 
 const Cart = () => {
   const [cart, setCart] = useState();
@@ -17,7 +18,7 @@ const Cart = () => {
         setCart(cart.data.data);
         const items = cart.data.data.items;
         const itemCount = cart.data.data.items.length;
-        dispatch(addItemToCart({itemCount, items}))
+        dispatch(addItemToCart({ itemCount, items }));
       } catch (error) {
         console.log(error);
       }
@@ -25,6 +26,20 @@ const Cart = () => {
 
     fetchData();
   }, []);
+
+  async function removeFromCartAndShowToast(pizzaId) {
+    try {
+      const res = await removeFromCart(pizzaId);
+      console.log(res);
+      if (res.statusText == "OK") {
+        notify("Product removed from cart !!");
+        setCart(res.data.data);
+      }
+    } catch (err) {
+      console.log(err);
+      alert(err.response.data.message);
+    }
+  }
 
   if (cart) {
     return (
@@ -42,8 +57,61 @@ const Cart = () => {
                   <h1>{pizza.name}</h1>
                   <span>{pizza.size}</span>
                 </div>
-                <span className="flex-1">{`${pizza.quantity} Pcs`}</span>
+                <div className="flex items-center flex-1">
+                  <button
+                    type="button"
+                    className="w-6 h-6 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    data-hs-input-number-decrement
+                  >
+                    <svg
+                      className="flex-shrink-0 w-3.5 h-3.5"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M5 12h14" />
+                    </svg>
+                  </button>
+                  <span className="mx-2">{pizza.quantity} Pcs</span>
+                  <button
+                    type="button"
+                    className="w-6 h-6 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    data-hs-input-number-increment
+                  >
+                    <svg
+                      className="flex-shrink-0 w-3.5 h-3.5"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M5 12h14" />
+                      <path d="M12 5v14" />
+                    </svg>
+                  </button>
+                </div>
                 <span className="font-bold text-lg">{`₹${pizza.total}`}</span>
+                <button
+                  className="btn"
+                  onClick={() => removeFromCartAndShowToast(pizza.productId)}
+                >
+                  <img
+                    className="w-6 h-6 mx-10"
+                    src="https://res.cloudinary.com/satish07/image/upload/v1702536967/fgbkqcfa6bqlcrzcnojl.png"
+                    alt=""
+                  />
+                </button>
               </div>
             ))}
           </div>
