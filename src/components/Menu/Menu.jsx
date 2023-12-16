@@ -2,9 +2,13 @@ import React, { useEffect, useState } from "react";
 import { getAllProducts } from "../../services/menu";
 import { addToCart } from "../../services/cart";
 import { notify } from "../../services/toast";
+import { useDispatch, useSelector } from "react-redux";
+import { addItemToCart } from "../../store/cartSlice";
 
 const Menu = () => {
   const [menu, setMenu] = useState([]);
+  const items = useSelector((state) => state.cart.items);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,9 +25,24 @@ const Menu = () => {
 
   async function addToCartAndShowToast(pizzaId) {
     try {
-      const res = await addToCart(pizzaId);
-      console.log(res);
-      notify("Product added to cart !!");
+      const data = {
+        quantity: 1,
+      };
+      items.forEach((item) => {
+        if (item.productId == pizzaId) {
+          data.quantity = item.quantity + 1;
+        }
+      });
+      const updatedCart = await addToCart(pizzaId, data);
+      dispatch(
+        addItemToCart({
+          itemCount: updatedCart.data.data.items.length,
+          items: updatedCart.data.data.items,
+        })
+      );
+      if (updatedCart.statusText == "OK") {
+        notify("Product added to cart !!");
+      }
     } catch (err) {
       console.log(err);
       alert(err.response.data.message);

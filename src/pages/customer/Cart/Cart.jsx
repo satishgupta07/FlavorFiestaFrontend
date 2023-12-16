@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getCart, removeFromCart } from "../../../services/cart";
+import { addToCart, getCart, removeFromCart } from "../../../services/cart";
 import { useDispatch, useSelector } from "react-redux";
 import { addItemToCart } from "../../../store/cartSlice";
 import { notify } from "../../../services/toast";
@@ -8,6 +8,7 @@ import { notify } from "../../../services/toast";
 const Cart = () => {
   const [cart, setCart] = useState();
   const user = useSelector((state) => state.auth.userData);
+  const items = useSelector((state) => state.cart.items);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -29,11 +30,70 @@ const Cart = () => {
 
   async function removeFromCartAndShowToast(pizzaId) {
     try {
-      const res = await removeFromCart(pizzaId);
-      console.log(res);
-      if (res.statusText == "OK") {
+      const updatedCart = await removeFromCart(pizzaId);
+      if (updatedCart.statusText == "OK") {
         notify("Product removed from cart !!");
-        setCart(res.data.data);
+        setCart(updatedCart.data.data);
+        dispatch(
+          addItemToCart({
+            itemCount: updatedCart.data.data.items.length,
+            items: updatedCart.data.data.items,
+          })
+        );
+      }
+    } catch (err) {
+      console.log(err);
+      alert(err.response.data.message);
+    }
+  }
+
+  async function increaseQuantity(pizzaId) {
+    try {
+      const data = {
+        quantity: 1,
+      };
+      for (const item of items) {
+        if (item.productId == pizzaId) {
+          data.quantity = item.quantity + 1;
+          break;
+        }
+      }
+      const updatedCart = await addToCart(pizzaId, data);
+      setCart(updatedCart.data.data);
+      dispatch(
+        addItemToCart({
+          itemCount: updatedCart.data.data.items.length,
+          items: updatedCart.data.data.items,
+        })
+      );
+    } catch (err) {
+      console.log(err);
+      alert(err.response.data.message);
+    }
+  }
+
+  async function decreaseQuantity(pizzaId) {
+    try {
+      const data = {
+        quantity: 1,
+      };
+      for (const item of items) {
+        if (item.productId == pizzaId) {
+          data.quantity = item.quantity - 1;
+          break;
+        }
+      }
+      if (data.quantity == 0) {
+        await removeFromCartAndShowToast(pizzaId);
+      } else {
+        const updatedCart = await addToCart(pizzaId, data);
+        setCart(updatedCart.data.data);
+        dispatch(
+          addItemToCart({
+            itemCount: updatedCart.data.data.items.length,
+            items: updatedCart.data.data.items,
+          })
+        );
       }
     } catch (err) {
       console.log(err);
@@ -62,6 +122,7 @@ const Cart = () => {
                     type="button"
                     className="w-6 h-6 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
                     data-hs-input-number-decrement
+                    onClick={() => decreaseQuantity(pizza.productId)}
                   >
                     <svg
                       className="flex-shrink-0 w-3.5 h-3.5"
@@ -83,6 +144,7 @@ const Cart = () => {
                     type="button"
                     className="w-6 h-6 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
                     data-hs-input-number-increment
+                    onClick={() => increaseQuantity(pizza.productId)}
                   >
                     <svg
                       className="flex-shrink-0 w-3.5 h-3.5"

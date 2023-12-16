@@ -8,9 +8,9 @@ const headers = {
   Authorization: `Bearer ${jwtToken}`,
 };
 
-export const addToCart = async (productId) => {
+export const addToCart = async (productId, data) => {
   try {
-    return await axios.post(`${URL}/cart/item/${productId}`, {}, { headers });
+    return await axios.post(`${URL}/cart/item/${productId}`, data, { headers });
   } catch (error) {
     console.log("Error while adding product to cart !!", error);
   }
@@ -25,8 +25,6 @@ export const getCart = async () => {
 };
 
 export const removeFromCart = async (productId) => {
-  console.log(productId);
-  console.log(jwtToken);
   try {
     return await axios.delete(`${URL}/cart/item/${productId}`, { headers });
   } catch (error) {
