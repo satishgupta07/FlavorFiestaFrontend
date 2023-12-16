@@ -1,16 +1,20 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { logout } from "../../store/authSlice";
+import { addItemToCart } from "../../store/cartSlice";
 
 const Navbar = () => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.userData);
   const itemCount = useSelector((state) => state.cart.itemCount);
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     dispatch(logout());
-    localStorage.removeItem('reduxState');
+    dispatch(addItemToCart({ itemCount: 0, items: [] }));
+    localStorage.removeItem("reduxState");
+    navigate("/login");
   };
 
   return (
@@ -29,11 +33,7 @@ const Navbar = () => {
             <>
               {user.role === "admin" ? (
                 <li className="ml-6">
-                  <Link
-                    to="/admin/products"
-                  >
-                    Products
-                  </Link>
+                  <Link to="/admin/products">Products</Link>
                 </li>
               ) : (
                 <></>

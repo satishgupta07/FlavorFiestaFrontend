@@ -4,6 +4,7 @@ import { addToCart, getCart, removeFromCart } from "../../../services/cart";
 import { useDispatch, useSelector } from "react-redux";
 import { addItemToCart } from "../../../store/cartSlice";
 import { notify } from "../../../services/toast";
+import { createOrder } from "../../../services/order";
 
 const Cart = () => {
   const [cart, setCart] = useState();
@@ -15,11 +16,14 @@ const Cart = () => {
     const fetchData = async () => {
       try {
         const cart = await getCart();
-        console.log(cart.data.data);
+        console.log(cart);
         setCart(cart.data.data);
-        const items = cart.data.data.items;
-        const itemCount = cart.data.data.items.length;
-        dispatch(addItemToCart({ itemCount, items }));
+        dispatch(
+          addItemToCart({
+            itemCount: cart.data.data.items.length,
+            items: cart.data.data.items,
+          })
+        );
       } catch (error) {
         console.log(error);
       }
@@ -98,6 +102,20 @@ const Cart = () => {
     } catch (err) {
       console.log(err);
       alert(err.response.data.message);
+    }
+  }
+
+  async function placeOrder() {
+    try {
+      const data = {
+        items,
+        phone: "9234818924",
+        address: "ABC Street, XYZ City"
+      }
+      const order = await createOrder(data);
+      console.log(order);
+    } catch (error) {
+      console.log(err);
     }
   }
 
@@ -185,7 +203,7 @@ const Cart = () => {
             </div>
             {user ? (
               <div>
-                <form action="/orders" method="POST" className="mt-12">
+                {/* <form className="mt-12"> */}
                   <input
                     name="phone"
                     className="border border-gray-400 p-2 w-1/2 mb-4"
@@ -203,11 +221,12 @@ const Cart = () => {
                       data-tilt
                       className="bg-orange-500 hover:bg-orange-400 text-white font-bold py-2 px-6 mt-6 border-b-4 border-orange-700 hover:border-orange-500 rounded-full hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-opacity-75"
                       type="submit"
+                      onClick={() => placeOrder()}
                     >
                       Order Now
                     </button>
                   </div>
-                </form>
+                {/* </form> */}
               </div>
             ) : (
               <Link

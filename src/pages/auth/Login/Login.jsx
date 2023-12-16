@@ -5,22 +5,31 @@ import authService from "../../../services/auth";
 import { useForm } from "react-hook-form";
 import { login } from "../../../store/authSlice";
 import { notify } from "../../../services/toast";
+import { getCart } from "../../../services/cart";
+import { addItemToCart } from "../../../store/cartSlice";
 
 const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { register, handleSubmit } = useForm();
   const [error, setError] = useState("");
-  
+
   const loginForm = async (data) => {
     setError("");
     try {
       let userData = await authService.login(data);
       localStorage.setItem("jwtToken", userData.data.data.access_token);
       userData = userData.data.data.user;
-      if(userData) {
+      if (userData) {
+        const cart = await getCart();
         notify("User logged in successfully !!");
         dispatch(login({ userData }));
+        dispatch(
+          addItemToCart({
+            itemCount: cart.data.data.items.length,
+            items: cart.data.data.items,
+          })
+        );
         navigate("/");
       }
     } catch (error) {
