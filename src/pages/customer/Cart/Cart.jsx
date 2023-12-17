@@ -109,6 +109,7 @@ const Cart = () => {
     try {
       const data = {
         items,
+        totalAmount : cart.cartTotal,
         phone: "9234818924",
         address: "ABC Street, XYZ City",
       };
