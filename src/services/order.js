@@ -31,3 +31,20 @@ export const getOrderById = async (orderId) => {
     console.log("Error while fetching the order !!", error);
   }
 };
+
+export const getAllOrders = async () => {
+  try {
+    return await axios.get(`${URL}/orders/all-orders`, { headers });
+  } catch (error) {
+    console.log("Error while placing the order !!", error);
+  }
+};
+
+export const updateStatus = async (data) => {
+  try {
+    console.log(data);
+    return await axios.post(`${URL}/orders/order/status`, data, { headers });
+  } catch (error) {
+    console.log("Error while updatind the order status !!", error);
+  }
+}

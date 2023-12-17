@@ -10,6 +10,7 @@ import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import Orders from "./pages/customer/Orders";
 import OrderDetail from "./pages/customer/OrderDetail";
+import AllOrders from "./pages/admin/AllOrders";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route exact path="/register" element={<Register />} />
           <Route exact path="/cart" element={<Cart />} />
           <Route exact path="/admin/products" element={<Products />} />
+          <Route exact path="/admin/orders" element={<AllOrders />} />
           <Route exact path="/customer/orders" element={<Orders />} />
           <Route exact path="/customer/orders/:orderId" element={<OrderDetail />} />
         </Routes>
