@@ -18,6 +18,11 @@ function Orders() {
 
     fetchData();
   }, []);
+
+  const link = {
+    color: '#fe5f1e',
+  };
+
   return (
     <section className="orders light-section">
       <div className="container mx-auto pt-12">
@@ -52,7 +57,7 @@ function Orders() {
               orders.map((order) => (
                 <tr key={order._id}>
                   <td className="border px-4 py-2">
-                    <Link className="link" to={`/customer/orders/${order._id}`}>
+                    <Link style={link} to={`/customer/orders/${order._id}`}>
                       {order._id}
                     </Link>
                   </td>

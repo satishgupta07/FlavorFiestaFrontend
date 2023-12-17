@@ -110,8 +110,8 @@ const Cart = () => {
       const data = {
         items,
         phone: "9234818924",
-        address: "ABC Street, XYZ City"
-      }
+        address: "ABC Street, XYZ City",
+      };
       const order = await createOrder(data);
       console.log(order);
     } catch (error) {
@@ -119,7 +119,7 @@ const Cart = () => {
     }
   }
 
-  if (cart) {
+  if (cart && items.length) {
     return (
       <div className="cart py-16">
         <div className="order container mx-auto xl:w-1/2">
@@ -204,28 +204,28 @@ const Cart = () => {
             {user ? (
               <div>
                 {/* <form className="mt-12"> */}
-                  <input
-                    name="phone"
-                    className="border border-gray-400 p-2 w-1/2 mb-4"
-                    type="text"
-                    placeholder="Phone number"
-                  />
-                  <input
-                    name="address"
-                    className="border border-gray-400 p-2 w-1/2"
-                    type="text"
-                    placeholder="Address"
-                  />
-                  <div>
-                    <button
-                      data-tilt
-                      className="bg-orange-500 hover:bg-orange-400 text-white font-bold py-2 px-6 mt-6 border-b-4 border-orange-700 hover:border-orange-500 rounded-full hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-opacity-75"
-                      type="submit"
-                      onClick={() => placeOrder()}
-                    >
-                      Order Now
-                    </button>
-                  </div>
+                <input
+                  name="phone"
+                  className="border border-gray-400 p-2 w-1/2 mb-4"
+                  type="text"
+                  placeholder="Phone number"
+                />
+                <input
+                  name="address"
+                  className="border border-gray-400 p-2 w-1/2"
+                  type="text"
+                  placeholder="Address"
+                />
+                <div>
+                  <button
+                    data-tilt
+                    className="bg-orange-500 hover:bg-orange-400 text-white font-bold py-2 px-6 mt-6 border-b-4 border-orange-700 hover:border-orange-500 rounded-full hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-opacity-75"
+                    type="submit"
+                    onClick={() => placeOrder()}
+                  >
+                    Order Now
+                  </button>
+                </div>
                 {/* </form> */}
               </div>
             ) : (

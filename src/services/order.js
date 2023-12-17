@@ -23,3 +23,11 @@ export const getAllOrdersOfUser = async () => {
     console.log("Error while placing the order !!", error);
   }
 };
+
+export const getOrderById = async (orderId) => {
+  try {
+    return await axios.get(`${URL}/orders/${orderId}`, { headers });
+  } catch (error) {
+    console.log("Error while fetching the order !!", error);
+  }
+};
