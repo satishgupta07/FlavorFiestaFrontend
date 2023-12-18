@@ -7,6 +7,7 @@ import { useSelector } from "react-redux";
 function OrderDetail() {
   const { orderId } = useParams();
   const [order, setOrder] = useState();
+  const [statuses, setStatuses] = useState([]);
   const jwtToken = useSelector((state) => state.auth.jwtToken);
 
   useEffect(() => {
@@ -20,7 +21,40 @@ function OrderDetail() {
     }
 
     getOrder(orderId);
-  }, [orderId]);
+  }, [orderId, jwtToken]);
+
+  useEffect(() => {
+    if (order) {
+      const statusRefs = Array.from({ length: 5 }, () => React.createRef());
+      setStatuses(statusRefs);
+    }
+  }, [order]);
+
+  useEffect(() => {
+    if (order && statuses.length > 0) {
+      statuses.forEach((status, index) => {
+        status.current.classList.remove("step-completed");
+        status.current.classList.remove("current");
+      });
+
+      let stepCompleted = true;
+
+      statuses.forEach((status, index) => {
+        let dataProp = status.current.dataset.status;
+
+        if (stepCompleted) {
+          status.current.classList.add("step-completed");
+        }
+
+        if (dataProp === order.status) {
+          stepCompleted = false;
+          if (index < statuses.length - 1) {
+            statuses[index + 1].current.classList.add("current");
+          }
+        }
+      });
+    }
+  }, [order, statuses]);
 
   {
     if (order) {
@@ -42,38 +76,35 @@ function OrderDetail() {
               </div>
               <ul>
                 <li
-                  className={`status_line text-sm md:text-xl pb-16 step-completed ${
-                    order.status === "order_placed" ? "current" : ""
-                  }`}
+                  ref={statuses[0]}
+                  className="status_line text-sm md:text-xl pb-16"
                   data-status="order_placed"
                 >
                   <span>Order Placed</span>
                 </li>
                 <li
-                  className={`status_line text-sm md:text-xl pb-16 ${
-                    order.status === "confirmed" ? "current" : ""
-                  }`}
+                  ref={statuses[1]}
+                  className="status_line text-sm md:text-xl pb-16"
                   data-status="confirmed"
                 >
                   <span>Order confirmation</span>
                 </li>
                 <li
-                  className={`status_line text-sm md:text-xl pb-16 ${
-                    order.status === "prepared" ? "current" : ""
-                  }`}
+                  ref={statuses[2]}
+                  className="status_line text-sm md:text-xl pb-16"
                   data-status="prepared"
                 >
                   <span>Preparation</span>
                 </li>
                 <li
-                  className={`status_line text-sm md:text-xl pb-16 ${
-                    order.status === "delivered" ? "current" : ""
-                  }`}
+                  ref={statuses[3]}
+                  className="status_line text-sm md:text-xl pb-16"
                   data-status="delivered"
                 >
                   <span>Out for delivery </span>
                 </li>
                 <li
+                  ref={statuses[4]}
                   className="status_line text-sm md:text-xl"
                   data-status="completed"
                 >
