@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { getAllOrdersOfUser } from "../../../services/order";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 function Orders() {
   const [orders, setOrders] = useState([]);
+  const jwtToken = useSelector((state) => state.auth.jwtToken);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await getAllOrdersOfUser();
+        const res = await getAllOrdersOfUser(jwtToken);
         console.log(res.data.data);
         setOrders(res.data.data);
       } catch (error) {

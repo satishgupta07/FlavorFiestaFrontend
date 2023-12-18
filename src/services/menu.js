@@ -1,12 +1,5 @@
 import axios from "axios";
 const URL = "http://localhost:8000/api/v1";
-const jwtToken = localStorage.getItem("jwtToken");
-
-const headers = {
-  Accept: "application/json",
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${jwtToken}`,
-};
 
 export const getAllProducts = async () => {
   try {
@@ -16,7 +9,12 @@ export const getAllProducts = async () => {
   }
 };
 
-export const createNewProduct = async (data) => {
+export const createNewProduct = async (data, jwtToken) => {
+  const headers = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${jwtToken}`,
+  };
   try {
     return await axios.post(`${URL}/products`, data, { headers });
   } catch (error) {

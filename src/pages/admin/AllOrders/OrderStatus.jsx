@@ -1,15 +1,17 @@
 import React, { useState } from "react";
 import { updateStatus } from "../../../services/order";
+import { useSelector } from "react-redux";
 
 function OrderStatus({ order }) {
   const [status, setStatus] = useState(order.status);
+  const jwtToken = useSelector((state) => state.auth.jwtToken);
   async function changeStatus(e) {
     setStatus(e.target.value);
     try {
       const updatedOrder = await updateStatus({
         orderId: order._id,
         newStatus: e.target.value,
-      });
+      }, jwtToken);
 
       console.log(updatedOrder);
     } catch (error) {

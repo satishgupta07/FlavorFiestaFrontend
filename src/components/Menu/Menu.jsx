@@ -8,6 +8,8 @@ import { addItemToCart } from "../../store/cartSlice";
 const Menu = () => {
   const [menu, setMenu] = useState([]);
   const items = useSelector((state) => state.cart.items);
+  const jwtToken = useSelector((state) => state.auth.jwtToken);
+
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -33,7 +35,7 @@ const Menu = () => {
           data.quantity = item.quantity + 1;
         }
       });
-      const updatedCart = await addToCart(pizzaId, data);
+      const updatedCart = await addToCart(pizzaId, data, jwtToken);
       dispatch(
         addItemToCart({
           itemCount: updatedCart.data.data.items.length,

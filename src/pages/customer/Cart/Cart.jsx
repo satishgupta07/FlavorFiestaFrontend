@@ -10,13 +10,17 @@ const Cart = () => {
   const [cart, setCart] = useState();
   const user = useSelector((state) => state.auth.userData);
   const items = useSelector((state) => state.cart.items);
+  const [deliveryData, setDeliveryData] = useState({
+    phone: "",
+    address: "",
+  });
   const dispatch = useDispatch();
+  const jwtToken = useSelector((state) => state.auth.jwtToken);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const cart = await getCart();
-        console.log(cart);
+        const cart = await getCart(jwtToken);
         setCart(cart.data.data);
         dispatch(
           addItemToCart({
@@ -34,7 +38,7 @@ const Cart = () => {
 
   async function removeFromCartAndShowToast(pizzaId) {
     try {
-      const updatedCart = await removeFromCart(pizzaId);
+      const updatedCart = await removeFromCart(pizzaId, jwtToken);
       if (updatedCart.statusText == "OK") {
         notify("Product removed from cart !!");
         setCart(updatedCart.data.data);
@@ -62,7 +66,7 @@ const Cart = () => {
           break;
         }
       }
-      const updatedCart = await addToCart(pizzaId, data);
+      const updatedCart = await addToCart(pizzaId, data, jwtToken);
       setCart(updatedCart.data.data);
       dispatch(
         addItemToCart({
@@ -90,7 +94,7 @@ const Cart = () => {
       if (data.quantity == 0) {
         await removeFromCartAndShowToast(pizzaId);
       } else {
-        const updatedCart = await addToCart(pizzaId, data);
+        const updatedCart = await addToCart(pizzaId, data, jwtToken);
         setCart(updatedCart.data.data);
         dispatch(
           addItemToCart({
@@ -105,15 +109,23 @@ const Cart = () => {
     }
   }
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setDeliveryData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
   async function placeOrder() {
     try {
       const data = {
         items,
-        totalAmount : cart.cartTotal,
-        phone: "9234818924",
-        address: "ABC Street, XYZ City",
+        totalAmount: cart.cartTotal,
+        phone: deliveryData.phone,
+        address: deliveryData.address,
       };
-      const order = await createOrder(data);
+      const order = await createOrder(data, jwtToken);
       console.log(order);
     } catch (error) {
       console.log(err);
@@ -122,7 +134,7 @@ const Cart = () => {
 
   if (cart && items.length) {
     return (
-      <div className="cart py-16">
+      <div className="cart py-8">
         <div className="order container mx-auto xl:w-1/2">
           <div className="flex items-center border-b border-grey-300 pb-4">
             <img src="src\assets\cart-black.png" alt="?" />
@@ -203,20 +215,27 @@ const Cart = () => {
               <span className="amount text-2xl font-bold ml-2">{`₹${cart.cartTotal}`}</span>
             </div>
             {user ? (
-              <div>
-                {/* <form className="mt-12"> */}
-                <input
-                  name="phone"
-                  className="border border-gray-400 p-2 w-1/2 mb-4"
-                  type="text"
-                  placeholder="Phone number"
-                />
-                <input
-                  name="address"
-                  className="border border-gray-400 p-2 w-1/2"
-                  type="text"
-                  placeholder="Address"
-                />
+              <div className="mt-6">
+                <div>
+                  <input
+                    name="phone"
+                    className="border border-gray-400 p-2 w-1/2 mb-4"
+                    type="text"
+                    placeholder="Phone number"
+                    value={deliveryData.phone}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <input
+                    name="address"
+                    className="border border-gray-400 p-2 w-1/2"
+                    type="text"
+                    placeholder="Address"
+                    value={deliveryData.address}
+                    onChange={handleInputChange}
+                  />
+                </div>
                 <div>
                   <button
                     data-tilt
@@ -227,7 +246,6 @@ const Cart = () => {
                     Order Now
                   </button>
                 </div>
-                {/* </form> */}
               </div>
             ) : (
               <Link

@@ -1,23 +1,14 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "react-toastify";
 import conf from "../../../config/conf";
 import { createNewProduct } from "../../../services/menu";
+import { useSelector } from "react-redux";
+import { notify } from "../../../services/toast";
 
 function AddProduct() {
   const [showModal, setShowModal] = useState(false);
   const { register, handleSubmit } = useForm();
-  const notify = () =>
-    toast.success("Product created successfully !!", {
-      position: "bottom-center",
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "colored",
-    });
+  const jwtToken = useSelector((state) => state.auth.jwtToken);
 
   const onSubmit = async (data) => {
     try {
@@ -27,10 +18,10 @@ function AddProduct() {
         price: parseInt(data.price),
         size: data.size,
         image: imageUrl,
-      });
+      }, jwtToken);
       if (createdProduct) {
         setShowModal(false);
-        notify();
+        notify("Product created successfully !!");
       }
     } catch (error) {
       console.error("Error while creating product:", error);

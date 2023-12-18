@@ -4,24 +4,13 @@ import { Link, useNavigate } from "react-router-dom";
 import authService from "../../../services/auth";
 import { useForm } from "react-hook-form";
 import { login } from "../../../store/authSlice";
-import { toast } from "react-toastify";
+import { notify } from "../../../services/toast";
 
 const Register = () => {
   const navigate = useNavigate();
   const [error, setError] = useState("");
   const dispatch = useDispatch();
   const { register, handleSubmit } = useForm();
-  const notify = () =>
-    toast.success("User registered successfully !!", {
-      position: "bottom-center",
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "colored",
-    });
 
   const create = async (data) => {
     setError("");
@@ -29,7 +18,7 @@ const Register = () => {
       let userData = await authService.createAccount(data);
       userData = userData.data.data.user;
       if (userData) {
-        notify();
+        notify("User registered successfully !!");
         dispatch(login({ userData }));
         navigate("/");
       }

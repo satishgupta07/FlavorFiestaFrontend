@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { getOrderById } from "../../../services/order";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setShowModal } from "../../../store/modalSlice";
 
 function OrderDetailModal({ orderId }) {
   const [order, setOrder] = useState();
   const dispatch = useDispatch();
+  const jwtToken = useSelector((state) => state.auth.jwtToken);
 
   useEffect(() => {
     async function getOrder(id) {
       try {
-        const order = await getOrderById(id);
-        console.log(order);
+        const order = await getOrderById(id, jwtToken);
         setOrder(order.data.data);
       } catch (err) {
         console.log(err);
@@ -29,7 +29,9 @@ function OrderDetailModal({ orderId }) {
           <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none">
             {/*header*/}
             <div className="flex items-start justify-between items-center p-2 border-b border-solid border-blueGray-200 rounded-t">
-              <h3 className="text-xl font-semibold">Order Details : {orderId}</h3>
+              <h3 className="text-xl font-semibold">
+                Order Details : {orderId}
+              </h3>
               <button
                 className="p-1 ml-auto text-3xl"
                 onClick={() => dispatch(setShowModal({ showModal: false }))}
@@ -55,7 +57,9 @@ function OrderDetailModal({ orderId }) {
                     </div>
                   ))}
                   <div className="flex flex-row mt-8 justify-end">
-                    <span className="font-bold text-lg">Total Amount : {`₹${order.totalAmount}`}</span>
+                    <span className="font-bold text-lg">
+                      Total Amount : {`₹${order.totalAmount}`}
+                    </span>
                   </div>
                 </>
               ) : (

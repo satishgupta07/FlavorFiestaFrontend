@@ -2,16 +2,17 @@ import React, { useEffect, useState } from "react";
 import "./OrderDetail.css";
 import { useParams } from "react-router-dom";
 import { getOrderById } from "../../../services/order";
+import { useSelector } from "react-redux";
 
 function OrderDetail() {
   const { orderId } = useParams();
   const [order, setOrder] = useState();
+  const jwtToken = useSelector((state) => state.auth.jwtToken);
 
   useEffect(() => {
     async function getOrder(id) {
       try {
-        const order = await getOrderById(id);
-        console.log(order);
+        const order = await getOrderById(id, jwtToken);
         setOrder(order.data.data);
       } catch (err) {
         console.log(err);

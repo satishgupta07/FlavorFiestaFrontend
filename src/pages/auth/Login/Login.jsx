@@ -18,12 +18,17 @@ const Login = () => {
     setError("");
     try {
       let userData = await authService.login(data);
-      localStorage.setItem("jwtToken", userData.data.data.access_token);
-      userData = userData.data.data.user;
       if (userData) {
-        const cart = await getCart();
+        dispatch(
+          login({
+            userData: userData.data.data.user,
+            jwtToken: userData.data.data.access_token,
+          })
+        );
+
+        const cart = await getCart(userData.data.data.access_token);
+
         notify("User logged in successfully !!");
-        dispatch(login({ userData }));
         dispatch(
           addItemToCart({
             itemCount: cart.data.data.items.length,

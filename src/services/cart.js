@@ -1,14 +1,12 @@
 import axios from "axios";
 const URL = "http://localhost:8000/api/v1";
-const jwtToken = localStorage.getItem("jwtToken");
 
-const headers = {
-  Accept: "application/json",
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${jwtToken}`,
-};
-
-export const addToCart = async (productId, data) => {
+export const addToCart = async (productId, data, jwtToken) => {
+  const headers = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${jwtToken}`,
+  };
   try {
     return await axios.post(`${URL}/cart/item/${productId}`, data, { headers });
   } catch (error) {
@@ -16,7 +14,12 @@ export const addToCart = async (productId, data) => {
   }
 };
 
-export const getCart = async () => {
+export const getCart = async (jwtToken) => {
+  const headers = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${jwtToken}`,
+  };
   try {
     return await axios.get(`${URL}/cart`, { headers });
   } catch (error) {
@@ -24,7 +27,12 @@ export const getCart = async () => {
   }
 };
 
-export const removeFromCart = async (productId) => {
+export const removeFromCart = async (productId, jwtToken) => {
+  const headers = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${jwtToken}`,
+  };
   try {
     return await axios.delete(`${URL}/cart/item/${productId}`, { headers });
   } catch (error) {

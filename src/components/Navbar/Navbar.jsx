@@ -2,7 +2,7 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { logout } from "../../store/authSlice";
-import { addItemToCart } from "../../store/cartSlice";
+import { removeItemsFromCart } from "../../store/cartSlice";
 
 const Navbar = () => {
   const dispatch = useDispatch();
@@ -12,7 +12,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     dispatch(logout());
-    dispatch(addItemToCart({ itemCount: 0, items: [] }));
+    dispatch(removeItemsFromCart());
     localStorage.removeItem("reduxState");
     navigate("/login");
   };

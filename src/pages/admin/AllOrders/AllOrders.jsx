@@ -10,12 +10,12 @@ function AllOrders() {
   const showModal = useSelector((state) => state.modal.showModal);
   const dispatch = useDispatch();
   const [orderId, setOrderId] = useState();
+  const jwtToken = useSelector((state) => state.auth.jwtToken);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const ords = await getAllOrders();
-        console.log(ords);
+        const ords = await getAllOrders(jwtToken);
         setOrders(ords.data.data);
       } catch (error) {
         console.log(error);
