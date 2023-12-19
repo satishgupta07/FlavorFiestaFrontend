@@ -3,6 +3,10 @@ import "./OrderDetail.css";
 import { useParams } from "react-router-dom";
 import { getOrderById } from "../../../services/order";
 import { useSelector } from "react-redux";
+import io from "socket.io-client";
+import { notify } from "../../../services/toast";
+
+const socket = io(import.meta.env.VITE_SOCKET_URI);
 
 function OrderDetail() {
   const { orderId } = useParams();
@@ -21,6 +25,18 @@ function OrderDetail() {
     }
 
     getOrder(orderId);
+
+    // Listen for order status changes from the server
+    socket.on("changeStatus", (updatedOrder) => {
+      notify("Order status updated");
+      // Update the order state when a changeStatus event is received
+      setOrder(updatedOrder.data.data);
+    });
+
+    // Clean up the event listener when the component unmounts
+    return () => {
+      socket.off("changeStatus");
+    };
   }, [orderId, jwtToken]);
 
   useEffect(() => {

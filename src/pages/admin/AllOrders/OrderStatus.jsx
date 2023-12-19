@@ -1,19 +1,41 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { updateStatus } from "../../../services/order";
 import { useSelector } from "react-redux";
+import io from "socket.io-client";
+
+const socket = io(import.meta.env.VITE_SOCKET_URI);
 
 function OrderStatus({ order }) {
   const [status, setStatus] = useState(order.status);
   const jwtToken = useSelector((state) => state.auth.jwtToken);
+
+  useEffect(() => {
+    // Subscribe to the "changeStatus" event when the component mounts
+    socket.on("changeStatus", (updatedOrder) => {
+      // Update the status in the component state when a changeStatus event is received
+      setStatus(updatedOrder.data.data.status);
+    });
+
+    // Clean up the event listener when the component unmounts
+    return () => {
+      socket.off("changeStatus");
+    };
+  }, [status]);
+
   async function changeStatus(e) {
     setStatus(e.target.value);
     try {
-      const updatedOrder = await updateStatus({
-        orderId: order._id,
-        newStatus: e.target.value,
-      }, jwtToken);
+      const updatedOrder = await updateStatus(
+        {
+          orderId: order._id,
+          newStatus: e.target.value,
+        },
+        jwtToken
+      );
 
-      console.log(updatedOrder);
+      // Emit a "changeStatus" event to inform the server about the status change
+      socket.emit("changeStatus", updatedOrder);
+
     } catch (error) {
       console.log(error);
     }
@@ -32,7 +54,7 @@ function OrderStatus({ order }) {
         <option value="confirmed">Confirmed</option>
         <option value="prepared">Prepared</option>
         <option value="delivered">Delivered</option>
-        <option value="completed">Completed</option>
+        {/* <option value="completed">Completed</option> */}
       </select>
     </form>
   );

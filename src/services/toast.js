@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 const notify = (prompt) =>
   toast.success(prompt, {
     position: "bottom-center",
-    autoClose: 3000,
+    autoClose: 1000,
     hideProgressBar: false,
     closeOnClick: true,
     pauseOnHover: true,
