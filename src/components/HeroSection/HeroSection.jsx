@@ -1,6 +1,13 @@
 import React from "react";
+import Carousel from "./Carousel";
 
 const HeroSection = () => {
+  const images = [
+    "https://res.cloudinary.com/satish07/image/upload/v1703268124/iczcf7vr2czz6lwha743.png",
+    "https://res.cloudinary.com/satish07/image/upload/v1703271172/tajxlqslrdwprypoxabh.jpg",
+    "https://res.cloudinary.com/satish07/image/upload/v1703270988/mr4pwsxbmo2smmrxqbkk.jpg",
+    "https://res.cloudinary.com/satish07/image/upload/v1703271176/f12eyvlav190akxpzsvd.jpg"
+  ];
   return (
     <section className="hero px-8 py-16">
       <div className="container mx-auto flex items-center justify-between">
@@ -17,7 +24,8 @@ const HeroSection = () => {
           </button>
         </div>
         <div className="w-1/2">
-          <img src="src\assets\hero-pizza.png" alt="" data-tilt />
+          <Carousel images={images} />
+          {/* <img src="src\assets\hero-pizza.png" alt="" data-tilt /> */}
         </div>
       </div>
     </section>

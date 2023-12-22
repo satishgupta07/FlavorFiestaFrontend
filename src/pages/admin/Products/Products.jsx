@@ -77,7 +77,7 @@ function Products() {
           ))}
         </tbody>
       </table>
-      <nav
+      {/* <nav
         className="flex items-center flex-column flex-wrap md:flex-row justify-between pt-4"
         aria-label="Table navigation"
       >
@@ -150,7 +150,7 @@ function Products() {
             </a>
           </li>
         </ul>
-      </nav>
+      </nav> */}
     </div>
   );
 }
