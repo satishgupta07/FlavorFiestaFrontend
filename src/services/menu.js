@@ -1,5 +1,5 @@
 import axios from "axios";
-const URL = "http://localhost:8000/api/v1";
+const URL = "https://flavor-fiesta-backend.onrender.com/api/v1";
 
 export const getAllProducts = async () => {
   try {
