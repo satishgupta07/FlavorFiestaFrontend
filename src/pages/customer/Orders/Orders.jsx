@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { getAllOrdersOfUser } from "../../../services/order";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { getCart } from "../../../services/cart";
+import { addItemToCart } from "../../../store/cartSlice";
 
 function Orders() {
   const [orders, setOrders] = useState([]);
   const jwtToken = useSelector((state) => state.auth.jwtToken);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -13,6 +16,13 @@ function Orders() {
         const res = await getAllOrdersOfUser(jwtToken);
         console.log(res.data.data);
         setOrders(res.data.data);
+        const cart = await getCart(jwtToken);
+        dispatch(
+          addItemToCart({
+            itemCount: cart.data.data.items.length,
+            items: cart.data.data.items,
+          })
+        );
       } catch (error) {
         console.log(error);
       }
