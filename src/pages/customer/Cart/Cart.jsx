@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { addToCart, getCart, removeFromCart } from "../../../services/cart";
+import {
+  addToCart,
+  clearCart,
+  getCart,
+  removeFromCart,
+} from "../../../services/cart";
 import { useDispatch, useSelector } from "react-redux";
-import { addItemToCart } from "../../../store/cartSlice";
+import { addItemToCart, removeItemsFromCart } from "../../../store/cartSlice";
 import { notify } from "../../../services/toast";
 import { createOrder } from "../../../services/order";
+import { loadStripe } from "@stripe/stripe-js";
 
 const Cart = () => {
   const [cart, setCart] = useState();
@@ -125,10 +131,22 @@ const Cart = () => {
         phone: deliveryData.phone,
         address: deliveryData.address,
       };
-      const order = await createOrder(data, jwtToken);
-      console.log(order);
+
+      const stripe = await loadStripe(
+        import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+      );
+
+      const response = await createOrder(data, jwtToken);
+
+      const result = await stripe.redirectToCheckout({
+        sessionId: response.data.data.sessionId,
+      });
+
+      if (result.error) {
+        console.error("Error redirecting to checkout:", result.error);
+      }
     } catch (error) {
-      console.log(err);
+      console.error("Error during payment:", error);
     }
   }
 

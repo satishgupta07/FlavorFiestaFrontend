@@ -39,3 +39,17 @@ export const removeFromCart = async (productId, jwtToken) => {
     console.log("Error while removing product from cart !!", error);
   }
 };
+
+export const clearCart = async (jwtToken) => {
+  const headers = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${jwtToken}`,
+  };
+
+  try {
+    await axios.delete(`${URL}/cart/clear`, { headers });
+  } catch (error) {
+    console.error("Error while clearing the cart:", error);
+  }
+};
