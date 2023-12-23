@@ -1,13 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  addToCart,
-  clearCart,
-  getCart,
-  removeFromCart,
-} from "../../../services/cart";
+import { addToCart, getCart, removeFromCart } from "../../../services/cart";
 import { useDispatch, useSelector } from "react-redux";
-import { addItemToCart, removeItemsFromCart } from "../../../store/cartSlice";
+import { addItemToCart } from "../../../store/cartSlice";
 import { notify } from "../../../services/toast";
 import { createOrder } from "../../../services/order";
 import { loadStripe } from "@stripe/stripe-js";
@@ -45,7 +40,7 @@ const Cart = () => {
   async function removeFromCartAndShowToast(pizzaId) {
     try {
       const updatedCart = await removeFromCart(pizzaId, jwtToken);
-      if (updatedCart.statusText == "OK") {
+      if (updatedCart) {
         notify("Product removed from cart !!");
         setCart(updatedCart.data.data);
         dispatch(
@@ -155,7 +150,10 @@ const Cart = () => {
       <div className="cart py-8">
         <div className="order container mx-auto xl:w-1/2">
           <div className="flex items-center border-b border-grey-300 pb-4">
-            <img src="src\assets\cart-black.png" alt="?" />
+            <img
+              src="https://res.cloudinary.com/satish07/image/upload/v1703332421/syoxokpgrvyq7gxenjfx.png"
+              alt="cart"
+            />
             <h1 className="font-bold ml-4 text-2xl">Order summary</h1>
           </div>
           <div className="pizza-list">
@@ -290,7 +288,7 @@ const Cart = () => {
           <img
             data-tilt
             className="w-1/5 mx-auto"
-            src="src\assets\empty-cart.png"
+            src="https://res.cloudinary.com/satish07/image/upload/v1703332487/rornwqygdert3etuoqhj.png"
             alt="empty-cart"
           />
           <Link

@@ -42,7 +42,7 @@ const Menu = () => {
           items: updatedCart.data.data.items,
         })
       );
-      if (updatedCart.statusText == "OK") {
+      if (updatedCart) {
         notify("Product added to cart !!");
       }
     } catch (err) {
