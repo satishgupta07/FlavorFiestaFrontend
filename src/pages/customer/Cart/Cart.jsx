@@ -11,6 +11,10 @@ import Loader from "../../../components/Loader";
 const Cart = () => {
   const [cart, setCart] = useState();
   const [loading, setLoading] = useState(true);
+  const [loader, setLoader] = useState({
+    show: false,
+    itemId: "",
+  });
   const user = useSelector((state) => state.auth.userData);
   const items = useSelector((state) => state.cart.items);
   const [deliveryData, setDeliveryData] = useState({
@@ -42,9 +46,17 @@ const Cart = () => {
   }, []);
 
   async function removeFromCartAndShowToast(pizzaId) {
+    setLoader({
+      show: true,
+      itemId: pizzaId,
+    });
     try {
       const updatedCart = await removeFromCart(pizzaId, jwtToken);
       if (updatedCart) {
+        setLoader({
+          show: false,
+          itemId: "",
+        });
         notify("Product removed from cart !!");
         setCart(updatedCart.data.data);
         dispatch(
@@ -61,6 +73,10 @@ const Cart = () => {
   }
 
   async function increaseQuantity(pizzaId) {
+    setLoader({
+      show: true,
+      itemId: pizzaId,
+    });
     try {
       const data = {
         quantity: 1,
@@ -72,13 +88,19 @@ const Cart = () => {
         }
       }
       const updatedCart = await addToCart(pizzaId, data, jwtToken);
-      setCart(updatedCart.data.data);
-      dispatch(
-        addItemToCart({
-          itemCount: updatedCart.data.data.items.length,
-          items: updatedCart.data.data.items,
-        })
-      );
+      if (updatedCart) {
+        setLoader({
+          show: false,
+          itemId: "",
+        });
+        setCart(updatedCart.data.data);
+        dispatch(
+          addItemToCart({
+            itemCount: updatedCart.data.data.items.length,
+            items: updatedCart.data.data.items,
+          })
+        );
+      }
     } catch (err) {
       console.log(err);
       alert(err.response.data.message);
@@ -86,6 +108,10 @@ const Cart = () => {
   }
 
   async function decreaseQuantity(pizzaId) {
+    setLoader({
+      show: true,
+      itemId: pizzaId,
+    });
     try {
       const data = {
         quantity: 1,
@@ -100,13 +126,19 @@ const Cart = () => {
         await removeFromCartAndShowToast(pizzaId);
       } else {
         const updatedCart = await addToCart(pizzaId, data, jwtToken);
-        setCart(updatedCart.data.data);
-        dispatch(
-          addItemToCart({
-            itemCount: updatedCart.data.data.items.length,
-            items: updatedCart.data.data.items,
-          })
-        );
+        if (updatedCart) {
+          setLoader({
+            show: false,
+            itemId: "",
+          });
+          setCart(updatedCart.data.data);
+          dispatch(
+            addItemToCart({
+              itemCount: updatedCart.data.data.items.length,
+              items: updatedCart.data.data.items,
+            })
+          );
+        }
       }
     } catch (err) {
       console.log(err);
@@ -216,7 +248,8 @@ const Cart = () => {
                     </svg>
                   </button>
                 </div>
-                <span className="font-bold text-lg">{`₹${pizza.total}`}</span>
+                {loader.itemId == pizza.productId && loader.show && <Loader />}
+                <span className="font-bold text-lg ml-4">{`₹${pizza.total}`}</span>
                 <button
                   className="btn"
                   onClick={() => removeFromCartAndShowToast(pizza.productId)}

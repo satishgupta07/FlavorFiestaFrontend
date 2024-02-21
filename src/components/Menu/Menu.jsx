@@ -57,7 +57,7 @@ const Menu = () => {
       if (updatedCart) {
         setLoader({
           show: false,
-          itemId: pizzaId,
+          itemId: "",
         });
         notify("Product added to cart !!");
       }
