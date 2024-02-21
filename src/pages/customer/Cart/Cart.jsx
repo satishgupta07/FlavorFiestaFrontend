@@ -6,9 +6,11 @@ import { addItemToCart } from "../../../store/cartSlice";
 import { notify } from "../../../services/toast";
 import { createOrder } from "../../../services/order";
 import { loadStripe } from "@stripe/stripe-js";
+import Loader from "../../../components/Loader";
 
 const Cart = () => {
   const [cart, setCart] = useState();
+  const [loading, setLoading] = useState(true);
   const user = useSelector((state) => state.auth.userData);
   const items = useSelector((state) => state.cart.items);
   const [deliveryData, setDeliveryData] = useState({
@@ -19,6 +21,7 @@ const Cart = () => {
   const jwtToken = useSelector((state) => state.auth.jwtToken);
 
   useEffect(() => {
+    setLoading(true);
     const fetchData = async () => {
       try {
         const cart = await getCart(jwtToken);
@@ -29,6 +32,7 @@ const Cart = () => {
             items: cart.data.data.items,
           })
         );
+        setLoading(false);
       } catch (error) {
         console.log(error);
       }
@@ -145,7 +149,9 @@ const Cart = () => {
     }
   }
 
-  if (cart && items.length) {
+  if (loading) {
+    return <Loader />;
+  } else if (cart && items.length) {
     return (
       <div className="cart py-8">
         <div className="order container mx-auto xl:w-1/2">
