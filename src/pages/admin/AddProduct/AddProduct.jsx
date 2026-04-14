@@ -2,213 +2,224 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import conf from "../../../config/conf";
 import { createNewProduct } from "../../../services/menu";
-import { useSelector } from "react-redux";
 import { notify } from "../../../services/toast";
+import Loader from "../../../components/Loader";
 
-function AddProduct() {
+function AddProduct({ onProductAdded }) {
   const [showModal, setShowModal] = useState(false);
-  const { register, handleSubmit } = useForm();
-  const jwtToken = useSelector((state) => state.auth.jwtToken);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [preview, setPreview] = useState(null);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
+
+  const uploadToCloudinary = async (file) => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("upload_preset", conf.cloudinaryUploadPreset);
+    form.append("cloud_name", conf.cloudName);
+    form.append("folder", "Menu");
+
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${conf.cloudName}/image/upload`,
+      { method: "POST", body: form }
+    );
+    if (!res.ok) throw new Error("Image upload failed");
+    const json = await res.json();
+    return json.secure_url; // Prefer https
+  };
 
   const onSubmit = async (data) => {
+    setIsSubmitting(true);
     try {
-      const imageUrl = await postDetails(data.image[0]);
-      const createdProduct = await createNewProduct({
+      const imageUrl = await uploadToCloudinary(data.image[0]);
+      await createNewProduct({
         name: data.name,
-        price: parseInt(data.price),
+        price: parseInt(data.price, 10),
         size: data.size,
         image: imageUrl,
-      }, jwtToken);
-      if (createdProduct) {
-        setShowModal(false);
-        notify("Product created successfully !!");
-      }
-    } catch (error) {
-      console.error("Error while creating product:", error);
+      });
+      notify("Product created successfully!");
+      reset();
+      setPreview(null);
+      setShowModal(false);
+      onProductAdded?.(); // Notify parent to refresh product list
+    } catch (err) {
+      notify(err?.message || "Failed to create product");
+      console.error("Error creating product:", err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const postDetails = async (image) => {
-    const data = new FormData();
-    data.append("file", image);
-    data.append("upload_preset", conf.cloudinaryUploadPreset);
-    data.append("cloud_name", conf.cloudName);
-    data.append("folder", "Menu");
-
-    try {
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${conf.cloudName}/image/upload`,
-        {
-          method: "post",
-          body: data,
-        }
-      );
-      const responseData = await response.json();
-      return responseData.url;
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      throw error;
-    }
+  const handleImagePreview = (e) => {
+    const file = e.target.files?.[0];
+    if (file) setPreview(URL.createObjectURL(file));
   };
+
+  const closeModal = () => {
+    setShowModal(false);
+    reset();
+    setPreview(null);
+  };
+
+  // Close on Escape
+  const handleKeyDown = (e) => { if (e.key === "Escape") closeModal(); };
 
   return (
     <>
-      {/* Modal toggle */}
       <button
-        className="inline-block px-4 py-2 rounded-full bg-sky-500"
         type="button"
         onClick={() => setShowModal(true)}
+        className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-orange-400"
       >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        </svg>
         Add Product
       </button>
-      {showModal ? (
+
+      {showModal && (
         <>
-          <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none">
-            <div className="relative p-4 w-full max-w-md max-h-full">
-              {/*content*/}
-              <div className="relative bg-white rounded-lg shadow">
-                {/*header*/}
-                <div className="flex items-start justify-between p-5 border-b border-solid border-blueGray-200 rounded-t">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Create New Product
-                  </h3>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+            onClick={closeModal}
+            aria-hidden="true"
+          />
+
+          {/* Modal */}
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            onKeyDown={handleKeyDown}
+          >
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <h3 className="font-bold text-gray-900 text-lg">Add New Product</h3>
+                <button
+                  onClick={closeModal}
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+                  aria-label="Close"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
+                {/* Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="prod-name">
+                    Product name
+                  </label>
+                  <input
+                    id="prod-name"
+                    type="text"
+                    placeholder="e.g. Margherita Pizza"
+                    className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent ${
+                      errors.name ? "border-red-400" : "border-gray-300"
+                    }`}
+                    {...register("name", { required: "Name is required" })}
+                  />
+                  {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
+                </div>
+
+                {/* Price + Size */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="prod-price">
+                      Price (₹)
+                    </label>
+                    <input
+                      id="prod-price"
+                      type="number"
+                      min="1"
+                      placeholder="299"
+                      className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent ${
+                        errors.price ? "border-red-400" : "border-gray-300"
+                      }`}
+                      {...register("price", { required: "Price is required", min: { value: 1, message: "Must be > 0" } })}
+                    />
+                    {errors.price && <p className="mt-1 text-xs text-red-500">{errors.price.message}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="prod-size">
+                      Size
+                    </label>
+                    <input
+                      id="prod-size"
+                      type="text"
+                      placeholder="Regular"
+                      className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent ${
+                        errors.size ? "border-red-400" : "border-gray-300"
+                      }`}
+                      {...register("size", { required: "Size is required" })}
+                    />
+                    {errors.size && <p className="mt-1 text-xs text-red-500">{errors.size.message}</p>}
+                  </div>
+                </div>
+
+                {/* Image upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Product image
+                  </label>
+                  <label className="relative flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition hover:border-orange-400 hover:bg-orange-50 border-gray-200 bg-gray-50 overflow-hidden">
+                    {preview ? (
+                      <img src={preview} alt="Preview" className="h-full w-full object-contain p-2" />
+                    ) : (
+                      <div className="text-center">
+                        <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p className="text-sm text-gray-500">Click to upload image</p>
+                        <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP</p>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      {...register("image", { required: "Image is required" })}
+                      onChange={(e) => {
+                        register("image").onChange(e);
+                        handleImagePreview(e);
+                      }}
+                    />
+                  </label>
+                  {errors.image && <p className="mt-1 text-xs text-red-500">{errors.image.message}</p>}
+                </div>
+
+                {/* Footer */}
+                <div className="flex gap-3 pt-2">
                   <button
-                    className="text-3xl"
-                    onClick={() => setShowModal(false)}
+                    type="button"
+                    onClick={closeModal}
+                    className="flex-1 border border-gray-300 text-gray-700 text-sm font-medium py-2.5 rounded-lg hover:bg-gray-50 transition"
                   >
-                    <span className="">×</span>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold py-2.5 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  >
+                    {isSubmitting ? "Uploading…" : "Create Product"}
                   </button>
                 </div>
-                {/* Modal body */}
-                {/* {error && (
-                  <p className="text-red-600 mt-8 text-center">{error}</p>
-                )} */}
-                <form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-5">
-                  <div className="grid gap-4 mb-4 grid-cols-2">
-                    <div className="col-span-2">
-                      <label
-                        htmlFor="name"
-                        className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                      >
-                        Name
-                      </label>
-                      <input
-                        type="text"
-                        name="name"
-                        id="name"
-                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                        placeholder="Type product name"
-                        {...register("name", {
-                          required: true,
-                        })}
-                      />
-                    </div>
-                    <div className="col-span-2 sm:col-span-1">
-                      <label
-                        htmlFor="price"
-                        className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                      >
-                        Price
-                      </label>
-                      <input
-                        type="text"
-                        name="price"
-                        id="price"
-                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                        placeholder="$2999"
-                        {...register("price", {
-                          required: true,
-                        })}
-                      />
-                    </div>
-                    <div className="col-span-2 sm:col-span-1">
-                      <label
-                        htmlFor="size"
-                        className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                      >
-                        Size
-                      </label>
-                      <input
-                        type="text"
-                        name="size"
-                        id="size"
-                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                        placeholder="Enter Size"
-                        {...register("size", {
-                          required: true,
-                        })}
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <label
-                        htmlFor="image"
-                        className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                      >
-                        Product Image
-                      </label>
-                      <div className="mt-4 relative flex w-full h-[200px] p-2 rounded-md border dark:border-white/20 group ">
-                        <div className="w-full h-full rounded-md flex flex-col items-center justify-center dark:group-hover:bg-[#47494A] relative bg-[#EAEBED]/60 group-hover:bg-[#d9dadc]/60 dark:bg-inherit ">
-                          <div>
-                            <svg
-                              stroke="currentColor"
-                              fill="currentColor"
-                              strokeWidth="0"
-                              viewBox="0 0 24 24"
-                              className="w-10 h-10 rounded-full dark:bg-[#5A5C5C] p-1.5 text-black/60 bg-[#D8DADF] "
-                              height="1em"
-                              width="1em"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path fill="none" d="M0 0h24v24H0z"></path>
-                              <path d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z"></path>
-                            </svg>
-                          </div>
-                          <div className="font-semibold text-[18px] leading-5 text-black/60 dark:text-white/60 ">
-                            Add photos
-                          </div>
-                          <span className="text-[12px] text-[#949698] dark:text-[#b0b3b8] ">
-                            or drag and drop
-                          </span>
-                        </div>
-                        <input
-                          type="file"
-                          name="image"
-                          accept="image/*"
-                          className="absolute w-full h-full top-0 left-0 z-[201] cursor-pointer opacity-0 "
-                          {...register("image", {
-                            required: true,
-                          })}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex justify-center">
-                    <button
-                      type="submit"
-                      className="text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-                    >
-                      <svg
-                        className="me-1 -ms-1 w-5 h-5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                          clipRule="evenodd"
-                        ></path>
-                      </svg>
-                      Add product
-                    </button>
-                  </div>
-                </form>
-              </div>
+              </form>
             </div>
           </div>
-          <div className="opacity-25 fixed inset-0 z-40 bg-black"></div>
         </>
-      ) : null}
+      )}
     </>
   );
 }

@@ -1,55 +1,21 @@
-import axios from "axios";
-const URL = "https://flavor-fiesta-backend.onrender.com/api/v1";
+/**
+ * services/cart.js — Shopping cart API calls.
+ *
+ * Uses apiClient which automatically attaches the JWT Bearer token from
+ * the Redux store, so callers no longer need to pass jwtToken manually.
+ */
+import apiClient from './apiClient';
 
-export const addToCart = async (productId, data, jwtToken) => {
-  const headers = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${jwtToken}`,
-  };
-  try {
-    return await axios.post(`${URL}/cart/item/${productId}`, data, { headers });
-  } catch (error) {
-    console.log("Error while adding product to cart !!", error);
-  }
-};
+/** Add a product to the cart or update its quantity (absolute value, not delta). */
+export const addToCart = (productId, data) =>
+  apiClient.post(`/cart/item/${productId}`, data);
 
-export const getCart = async (jwtToken) => {
-  const headers = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${jwtToken}`,
-  };
-  try {
-    return await axios.get(`${URL}/cart`, { headers });
-  } catch (error) {
-    console.log("Error while fetching cart !!", error);
-  }
-};
+/** Fetch the authenticated user's enriched cart. */
+export const getCart = () => apiClient.get('/cart');
 
-export const removeFromCart = async (productId, jwtToken) => {
-  const headers = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${jwtToken}`,
-  };
-  try {
-    return await axios.delete(`${URL}/cart/item/${productId}`, { headers });
-  } catch (error) {
-    console.log("Error while removing product from cart !!", error);
-  }
-};
+/** Remove a product entirely from the cart. */
+export const removeFromCart = (productId) =>
+  apiClient.delete(`/cart/item/${productId}`);
 
-export const clearCart = async (jwtToken) => {
-  const headers = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${jwtToken}`,
-  };
-
-  try {
-    await axios.delete(`${URL}/cart/clear`, { headers });
-  } catch (error) {
-    console.error("Error while clearing the cart:", error);
-  }
-};
+/** Empty all items from the cart. */
+export const clearCart = () => apiClient.delete('/cart/clear');

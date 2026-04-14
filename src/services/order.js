@@ -1,67 +1,22 @@
-import axios from "axios";
-const URL = "https://flavor-fiesta-backend.onrender.com/api/v1";
+/**
+ * services/order.js — Order placement and management API calls.
+ *
+ * All endpoints are authenticated. The JWT token is attached automatically
+ * by the apiClient interceptor — no need to pass it as a parameter.
+ */
+import apiClient from './apiClient';
 
-export const createOrder = async (data, jwtToken) => {
-  const headers = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${jwtToken}`,
-  };
-  try {
-    return await axios.post(`${URL}/orders/place-order`, data, { headers });
-  } catch (error) {
-    console.log("Error while placing the order !!", error);
-  }
-};
+/** Place an order and receive a Stripe sessionId. */
+export const createOrder = (data) => apiClient.post('/orders/place-order', data);
 
-export const getAllOrdersOfUser = async (jwtToken) => {
-  const headers = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${jwtToken}`,
-  };
-  try {
-    return await axios.get(`${URL}/orders`, { headers });
-  } catch (error) {
-    console.log("Error while placing the order !!", error);
-  }
-};
+/** Fetch all orders for the logged-in customer. */
+export const getAllOrdersOfUser = () => apiClient.get('/orders');
 
-export const getOrderById = async (orderId, jwtToken) => {
-  const headers = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${jwtToken}`,
-  };
-  try {
-    return await axios.get(`${URL}/orders/${orderId}`, { headers });
-  } catch (error) {
-    console.log("Error while fetching the order !!", error);
-  }
-};
+/** Fetch a single order with enriched product details. */
+export const getOrderById = (orderId) => apiClient.get(`/orders/${orderId}`);
 
-export const getAllOrders = async (jwtToken) => {
-  const headers = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${jwtToken}`,
-  };
-  try {
-    return await axios.get(`${URL}/orders/all-orders`, { headers });
-  } catch (error) {
-    console.log("Error while placing the order !!", error);
-  }
-};
+/** Admin: fetch every order across all customers. */
+export const getAllOrders = () => apiClient.get('/orders/all-orders');
 
-export const updateStatus = async (data, jwtToken) => {
-  const headers = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${jwtToken}`,
-  };
-  try {
-    return await axios.post(`${URL}/orders/order/status`, data, { headers });
-  } catch (error) {
-    console.log("Error while updatind the order status !!", error);
-  }
-};
+/** Admin: update an order's fulfilment status. */
+export const updateStatus = (data) => apiClient.post('/orders/order/status', data);

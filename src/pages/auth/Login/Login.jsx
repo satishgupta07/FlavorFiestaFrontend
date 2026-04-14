@@ -11,101 +11,122 @@ import { addItemToCart } from "../../../store/cartSlice";
 const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { register, handleSubmit } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const loginForm = async (data) => {
     setError("");
+    setIsLoading(true);
     try {
-      let userData = await authService.login(data);
-      if (userData) {
-        dispatch(
-          login({
-            userData: userData.data.data.user,
-            jwtToken: userData.data.data.access_token,
-          })
-        );
+      const response = await authService.login(data);
+      const { user, access_token } = response.data.data;
 
-        const cart = await getCart(userData.data.data.access_token);
+      if (user) {
+        dispatch(login({ userData: user, jwtToken: access_token }));
 
-        notify("User logged in successfully !!");
-        dispatch(
-          addItemToCart({
-            itemCount: cart.data.data.items.length,
-            items: cart.data.data.items,
-          })
-        );
+        // Pre-load cart so Navbar badge is accurate immediately after login
+        try {
+          const cart = await getCart();
+          dispatch(
+            addItemToCart({
+              itemCount: cart.data.data.items.length,
+              items: cart.data.data.items,
+            })
+          );
+        } catch {
+          // Non-critical: cart badge will update on next cart page visit
+        }
+
+        notify("Welcome back!");
         navigate("/");
       }
-    } catch (error) {
-      setError(error.message);
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || "Login failed");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <section className="login flex justify-center pt-24">
-      <div className="w-full max-w-sm">
-        {error && <p className="text-red-600 mt-8 text-center">{error}</p>}
-        <form
-          onSubmit={handleSubmit(loginForm)}
-          className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
-        >
-          <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="username"
-            >
-              Email
-            </label>
-            <input
-              name="email"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="username"
-              type="email"
-              placeholder="Enter your email"
-              {...register("email", {
-                required: true,
-                validate: {
-                  matchPatern: (value) =>
-                    /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value) ||
-                    "Email address must be a valid address",
-                },
-              })}
-            />
-          </div>
-          <div className="mb-6">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="password"
-            >
-              Password
-            </label>
-            <input
-              name="password"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-              id="password"
-              type="password"
-              placeholder="******************"
-              {...register("password", {
-                required: true,
-              })}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <button
-              className="bg-orange-500 hover:bg-orange-400 text-white font-bold py-2 px-6  border-b-4 border-orange-700 hover:border-orange-500 rounded-full hover:bg-orange-700"
-              type="submit"
-            >
-              Log In
-            </button>
-            <Link
-              to="/register"
-              className="inline-block align-baseline font-bold text-sm text-orange-500 hover:text-orange-800"
-            >
-              Don't have an account ?
+    <section className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+      <div className="w-full max-w-md">
+        {/* Branding */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-extrabold text-gray-900">Welcome back</h1>
+          <p className="mt-2 text-sm text-gray-500">
+            Don't have an account?{" "}
+            <Link to="/register" className="font-semibold text-orange-500 hover:text-orange-600">
+              Sign up
             </Link>
-          </div>
-        </form>
+          </p>
+        </div>
+
+        <div className="bg-white shadow-sm border border-gray-200 rounded-2xl px-8 py-8">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit(loginForm)} noValidate>
+            {/* Email */}
+            <div className="mb-5">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="email">
+                Email address
+              </label>
+              <input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                className={`w-full px-4 py-2.5 border rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition ${
+                  errors.email ? "border-red-400 bg-red-50" : "border-gray-300"
+                }`}
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+                    message: "Enter a valid email address",
+                  },
+                })}
+              />
+              {errors.email && (
+                <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>
+              )}
+            </div>
+
+            {/* Password */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="password">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                placeholder="Your password"
+                className={`w-full px-4 py-2.5 border rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition ${
+                  errors.password ? "border-red-400 bg-red-50" : "border-gray-300"
+                }`}
+                {...register("password", { required: "Password is required" })}
+              />
+              {errors.password && (
+                <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2"
+            >
+              {isLoading ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
+        </div>
       </div>
     </section>
   );

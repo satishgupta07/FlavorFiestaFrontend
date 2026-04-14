@@ -1,157 +1,92 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { getAllProducts } from "../../../services/menu";
 import AddProduct from "../AddProduct";
+import Loader from "../../../components/Loader";
 
 function Products() {
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const prod = await getAllProducts();
-        setProducts(prod.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    fetchData();
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await getAllProducts();
+      setProducts(res.data);
+    } catch (err) {
+      console.error("Failed to load products:", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  if (loading) return <Loader />;
+
   return (
-    <div className="relative overflow-x-auto shadow-md sm:rounded-lg mx-10 mb-10 px-5 pb-5">
-      <div className="flex justify-between p-5">
-        <h1 className="mb-4 text-2xl font-extrabold leading-none tracking-tight text-gray-900">
-          List of all products
-        </h1>
-        <AddProduct />
+    <section className="min-h-screen bg-gray-50 py-10 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Page header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-extrabold text-gray-900">Products</h1>
+            <p className="text-sm text-gray-500 mt-0.5">{products.length} items in catalogue</p>
+          </div>
+          {/* Passes fetchProducts so the modal can trigger a list refresh after adding */}
+          <AddProduct onProductAdded={fetchProducts} />
+        </div>
+
+        {products.length === 0 ? (
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-16 text-center">
+            <p className="text-gray-400">No products yet. Add your first product to get started.</p>
+          </div>
+        ) : (
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    {["Image", "Name", "Size", "Price (₹)", "Action"].map((h) => (
+                      <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {products.map((product) => (
+                    <tr key={product._id} className="hover:bg-gray-50 transition">
+                      <td className="px-5 py-4">
+                        <div className="w-14 h-14 bg-orange-50 rounded-xl overflow-hidden flex items-center justify-center">
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            className="w-full h-full object-contain p-1"
+                            loading="lazy"
+                          />
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 font-medium text-gray-900">{product.name}</td>
+                      <td className="px-5 py-4">
+                        <span className="inline-block bg-gray-100 text-gray-600 text-xs font-medium px-2.5 py-0.5 rounded-full uppercase tracking-wide">
+                          {product.size}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 font-semibold text-gray-900">₹{product.price}</td>
+                      <td className="px-5 py-4">
+                        <span className="text-xs text-gray-400 italic">Edit coming soon</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
-      <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-          <tr>
-            <th scope="col" className="px-6 py-3">
-              Product Image
-            </th>
-            <th scope="col" className="px-6 py-3">
-              Product Name
-            </th>
-            <th scope="col" className="px-6 py-3">
-              Size
-            </th>
-            <th scope="col" className="px-6 py-3">
-              Price
-            </th>
-            <th scope="col" className="px-6 py-3">
-              Action
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((product) => (
-            <tr
-              key={product._id}
-              className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-            >
-              <th
-                scope="row"
-                className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
-              >
-                <img
-                  src={product.image}
-                  className="w-16 md:w-32 max-w-full max-h-full"
-                  alt="product"
-                ></img>
-              </th>
-              <td className="px-6 py-4">{product.name}</td>
-              <td className="px-6 py-4">{product.size}</td>
-              <td className="px-6 py-4">₹{product.price}</td>
-              <td className="px-6 py-4">
-                <a
-                  href="#"
-                  className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                >
-                  Edit
-                </a>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {/* <nav
-        className="flex items-center flex-column flex-wrap md:flex-row justify-between pt-4"
-        aria-label="Table navigation"
-      >
-        <span className="text-sm font-normal text-gray-500 dark:text-gray-400 mb-4 md:mb-0 block w-full md:inline md:w-auto">
-          Showing{" "}
-          <span className="font-semibold text-gray-900 dark:text-white">
-            1-10
-          </span>{" "}
-          of{" "}
-          <span className="font-semibold text-gray-900 dark:text-white">
-            1000
-          </span>
-        </span>
-        <ul className="inline-flex -space-x-px rtl:space-x-reverse text-sm h-8">
-          <li>
-            <a
-              href="#"
-              className="flex items-center justify-center px-3 h-8 ms-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-            >
-              Previous
-            </a>
-          </li>
-          <li>
-            <a
-              href="#"
-              className="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-            >
-              1
-            </a>
-          </li>
-          <li>
-            <a
-              href="#"
-              className="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-            >
-              2
-            </a>
-          </li>
-          <li>
-            <a
-              href="#"
-              aria-current="page"
-              className="flex items-center justify-center px-3 h-8 text-blue-600 border border-gray-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
-            >
-              3
-            </a>
-          </li>
-          <li>
-            <a
-              href="#"
-              className="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-            >
-              4
-            </a>
-          </li>
-          <li>
-            <a
-              href="#"
-              className="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-            >
-              5
-            </a>
-          </li>
-          <li>
-            <a
-              href="#"
-              className="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-            >
-              Next
-            </a>
-          </li>
-        </ul>
-      </nav> */}
-    </div>
+    </section>
   );
 }
 

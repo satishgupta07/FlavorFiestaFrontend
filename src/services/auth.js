@@ -1,25 +1,20 @@
-import axios from "axios";
-const URL = 'https://flavor-fiesta-backend.onrender.com/api/v1';
+/**
+ * services/auth.js — Authentication API calls.
+ *
+ * Uses the shared apiClient which handles base URL and Content-Type.
+ * Auth endpoints are public so no Bearer token is attached by the interceptor.
+ */
+import apiClient from './apiClient';
 
 export class AuthService {
+  async createAccount(data) {
+    return apiClient.post('/users/register', data);
+  }
 
-    async createAccount(data) {
-        try {
-            return await axios.post(`${URL}/users/register`, data);
-        } catch (error) {
-            console.log('Error while registering user !!', error);
-        }
-    }
-
-    async login(data) {
-        try {
-            return await axios.post(`${URL}/users/login`, data);
-        } catch (error) {
-            console.log('Error while login !!', error);
-        }
-    }
+  async login(data) {
+    return apiClient.post('/users/login', data);
+  }
 }
 
 const authService = new AuthService();
-
-export default authService
+export default authService;
