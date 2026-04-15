@@ -8,10 +8,12 @@
  *  3. DOM manipulation via imperative refs replaced with declarative state.
  *  4. useEffect cleanup correctly removes only this component's listener.
  */
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getOrderById } from "../../../services/order";
-import { useSelector } from "react-redux";
+import { getOrderById, cancelOrder } from "../../../services/order";
+import { addToCart } from "../../../services/cart";
+import { useSelector, useDispatch } from "react-redux";
+import { addItemToCart } from "../../../store/cartSlice";
 import socket from "../../../services/socket";
 import { notify } from "../../../services/toast";
 import Loader from "../../../components/Loader";
@@ -42,11 +44,11 @@ function formatDate(iso) {
 
 function OrderDetail() {
   const { orderId } = useParams();
-  const [order, setOrder] = useState(null);
-  const [loading, setLoading] = useState(true);
-  // jwtToken is now injected by apiClient interceptor — no need to read from Redux here
-  // but keeping it for the initial fetch call consistency
-  useSelector((state) => state.auth.jwtToken); // keep store subscription alive
+  const [order, setOrder]         = useState(null);
+  const [loading, setLoading]     = useState(true);
+  const [cancelling, setCancelling] = useState(false);
+  const [reordering, setReordering] = useState(false);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -74,6 +76,40 @@ function OrderDetail() {
     return () => socket.off("changeStatus", handleStatusChange);
   }, [orderId]);
 
+  const handleCancel = async () => {
+    if (!window.confirm("Cancel this order?")) return;
+    setCancelling(true);
+    try {
+      const res = await cancelOrder(orderId);
+      setOrder(res.data.data);
+      notify("Order cancelled successfully");
+    } catch (err) {
+      notify(err?.response?.data?.message || "Failed to cancel order");
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  // Re-adds every item from this order into the cart, then syncs Redux state
+  const handleReorder = async () => {
+    setReordering(true);
+    try {
+      let lastCart;
+      for (const item of order.items) {
+        const res = await addToCart(item.productId, { quantity: item.quantity });
+        lastCart = res.data.data;
+      }
+      if (lastCart) {
+        dispatch(addItemToCart({ itemCount: lastCart.items.length, items: lastCart.items }));
+      }
+      notify("Items added to cart!");
+    } catch (err) {
+      notify(err?.response?.data?.message || "Failed to reorder");
+    } finally {
+      setReordering(false);
+    }
+  };
+
   if (loading) return <Loader />;
 
   // Bug fix: was missing `return` here — component now correctly returns null
@@ -95,16 +131,44 @@ function OrderDetail() {
       <div className="max-w-3xl mx-auto">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8 flex-wrap gap-2">
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
           <div>
             <Link to="/customer/orders" className="text-sm text-orange-500 hover:underline font-medium mb-1 inline-block">
               ← My Orders
             </Link>
             <h1 className="text-2xl font-extrabold text-gray-900">Track Your Order</h1>
           </div>
-          <span className="font-mono text-xs bg-white border border-gray-200 text-gray-500 px-3 py-1 rounded-full">
-            #{order._id.slice(-10).toUpperCase()}
-          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Reorder — always available */}
+            <button
+              onClick={handleReorder}
+              disabled={reordering}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-orange-500 bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-lg transition disabled:opacity-60"
+            >
+              {reordering ? <Loader inline /> : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              )}
+              {reordering ? "Adding…" : "Reorder"}
+            </button>
+
+            {/* Cancel — only when still in order_placed */}
+            {order.status === "order_placed" && (
+              <button
+                onClick={handleCancel}
+                disabled={cancelling}
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-red-500 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-lg transition disabled:opacity-60"
+              >
+                {cancelling ? <Loader inline /> : null}
+                {cancelling ? "Cancelling…" : "Cancel Order"}
+              </button>
+            )}
+
+            <span className="font-mono text-xs bg-white border border-gray-200 text-gray-500 px-3 py-2 rounded-lg">
+              #{order._id.slice(-10).toUpperCase()}
+            </span>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -172,7 +236,7 @@ function OrderDetail() {
                   <div key={item._id || idx} className="flex justify-between items-start text-sm">
                     <div>
                       <p className="font-medium text-gray-900">{item.name}</p>
-                      <p className="text-xs text-gray-400">{item.size} × {item.quantity}</p>
+                      <p className="text-xs text-gray-400">Qty: {item.quantity}</p>
                     </div>
                     <span className="font-semibold text-gray-900">₹{item.price * item.quantity}</span>
                   </div>

@@ -9,9 +9,11 @@
  *  Protected   /cart                       Shopping cart & checkout (auth required)
  *  (customer)  /customer/orders            Order history (auth required)
  *              /customer/orders/:orderId   Order detail & tracking (auth required)
+ *              /customer/profile           Edit profile & change password (auth required)
  *
- *  Admin       /admin/products   Product management (admin role required)
- *              /admin/orders     Order management with status updates (admin role required)
+ *  Admin       /admin             Dashboard with KPIs and recent orders (admin role required)
+ *              /admin/products    Product management (admin role required)
+ *              /admin/orders      Order management with status updates (admin role required)
  *
  *  Fallback    *               404 page
  *
@@ -39,7 +41,9 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Orders from "./pages/customer/Orders";
 import OrderDetail from "./pages/customer/OrderDetail";
+import Profile from "./pages/customer/Profile/Profile";
 import AllOrders from "./pages/admin/AllOrders";
+import Dashboard from "./pages/admin/Dashboard/Dashboard";
 import { useSelector } from "react-redux";
 
 function App() {
@@ -79,8 +83,25 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/customer/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
 
           {/* --- Admin routes (admin role only) --- */}
+          <Route
+            exact
+            path="/admin"
+            element={
+              <AdminRoute>
+                <Dashboard />
+              </AdminRoute>
+            }
+          />
           <Route
             exact
             path="/admin/products"

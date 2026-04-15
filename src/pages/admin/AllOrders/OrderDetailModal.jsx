@@ -84,7 +84,7 @@ function OrderDetailModal({ orderId }) {
                       <div>
                         <p className="font-medium text-gray-900 text-sm">{item.name}</p>
                         <p className="text-xs text-gray-400 mt-0.5">
-                          {item.size} — {item.quantity} × ₹{item.price}
+                          {item.quantity} × ₹{item.price}
                         </p>
                       </div>
                       <span className="font-semibold text-gray-900 text-sm">

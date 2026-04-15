@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import conf from "../../../config/conf";
 import { createNewProduct } from "../../../services/menu";
+import { uploadToCloudinary } from "../../../services/cloudinary";
+import { PRODUCT_CATEGORIES } from "../../../constants/menu";
 import { notify } from "../../../services/toast";
 import Loader from "../../../components/Loader";
 
@@ -16,31 +17,16 @@ function AddProduct({ onProductAdded }) {
     formState: { errors },
   } = useForm();
 
-  const uploadToCloudinary = async (file) => {
-    const form = new FormData();
-    form.append("file", file);
-    form.append("upload_preset", conf.cloudinaryUploadPreset);
-    form.append("cloud_name", conf.cloudName);
-    form.append("folder", "Menu");
-
-    const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${conf.cloudName}/image/upload`,
-      { method: "POST", body: form }
-    );
-    if (!res.ok) throw new Error("Image upload failed");
-    const json = await res.json();
-    return json.secure_url; // Prefer https
-  };
-
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
       const imageUrl = await uploadToCloudinary(data.image[0]);
       await createNewProduct({
-        name: data.name,
-        price: parseInt(data.price, 10),
-        size: data.size,
-        image: imageUrl,
+        name:        data.name,
+        price:       parseInt(data.price, 10),
+        image:       imageUrl,
+        category:    data.category,
+        description: data.description || "",
       });
       notify("Product created successfully!");
       reset();
@@ -132,39 +118,56 @@ function AddProduct({ onProductAdded }) {
                   {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
                 </div>
 
-                {/* Price + Size */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="prod-price">
-                      Price (₹)
-                    </label>
-                    <input
-                      id="prod-price"
-                      type="number"
-                      min="1"
-                      placeholder="299"
-                      className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent ${
-                        errors.price ? "border-red-400" : "border-gray-300"
-                      }`}
-                      {...register("price", { required: "Price is required", min: { value: 1, message: "Must be > 0" } })}
-                    />
-                    {errors.price && <p className="mt-1 text-xs text-red-500">{errors.price.message}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="prod-size">
-                      Size
-                    </label>
-                    <input
-                      id="prod-size"
-                      type="text"
-                      placeholder="Regular"
-                      className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent ${
-                        errors.size ? "border-red-400" : "border-gray-300"
-                      }`}
-                      {...register("size", { required: "Size is required" })}
-                    />
-                    {errors.size && <p className="mt-1 text-xs text-red-500">{errors.size.message}</p>}
-                  </div>
+                {/* Category */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="prod-category">
+                    Category
+                  </label>
+                  <select
+                    id="prod-category"
+                    className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent bg-white ${
+                      errors.category ? "border-red-400" : "border-gray-300"
+                    }`}
+                    {...register("category", { required: "Category is required" })}
+                  >
+                    <option value="">Select a category</option>
+                    {PRODUCT_CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                  {errors.category && <p className="mt-1 text-xs text-red-500">{errors.category.message}</p>}
+                </div>
+
+                {/* Price */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="prod-price">
+                    Price (₹)
+                  </label>
+                  <input
+                    id="prod-price"
+                    type="number"
+                    min="1"
+                    placeholder="299"
+                    className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent ${
+                      errors.price ? "border-red-400" : "border-gray-300"
+                    }`}
+                    {...register("price", { required: "Price is required", min: { value: 1, message: "Must be > 0" } })}
+                  />
+                  {errors.price && <p className="mt-1 text-xs text-red-500">{errors.price.message}</p>}
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="prod-desc">
+                    Description <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <textarea
+                    id="prod-desc"
+                    rows={2}
+                    placeholder="Short description shown on menu cards…"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent resize-none"
+                    {...register("description")}
+                  />
                 </div>
 
                 {/* Image upload */}
@@ -210,8 +213,9 @@ function AddProduct({ onProductAdded }) {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold py-2.5 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    className="flex-1 inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold py-2.5 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-orange-400"
                   >
+                    {isSubmitting && <Loader inline />}
                     {isSubmitting ? "Uploading…" : "Create Product"}
                   </button>
                 </div>

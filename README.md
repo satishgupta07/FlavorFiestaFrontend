@@ -4,6 +4,20 @@ React-based customer and admin interface for the FlavorFiesta food ordering appl
 
 ---
 
+## Test Credentials
+
+Use these accounts to explore the app without registering:
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@dev.in` | `admin` |
+| Customer | `user@dev.in` | `user` |
+
+> The **admin** account can manage products and update order statuses.
+> The **customer** account can browse the menu, add to cart, and place orders.
+
+---
+
 ## Table of Contents
 
 - [Overview](#overview)

@@ -41,6 +41,13 @@ const authSlice = createSlice({
          * The token is effectively invalidated because the state (and localStorage)
          * will no longer hold it after this action is dispatched.
          */
+        /**
+         * updateUserData — Updates only the user profile without touching the JWT.
+         * Use this after a profile edit so the token is not accidentally cleared.
+         */
+        updateUserData: (state, action) => {
+            state.userData = action.payload;
+        },
         logout: (state) => {
             state.status = false;
             state.userData = null;
@@ -48,6 +55,6 @@ const authSlice = createSlice({
      }
 })
 
-export const {login, logout} = authSlice.actions;
+export const {login, logout, updateUserData} = authSlice.actions;
 
 export default authSlice.reducer;
